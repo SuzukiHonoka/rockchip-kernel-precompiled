@@ -1,0 +1,93 @@
+name: Rockchip KERNEL CI
+on:
+  release:
+    types: published
+  push:
+    branches:
+      - master
+    paths:
+      - '.config'
+      - '.github/workflows/main.yml'
+      - 'patch/**'
+  watch:
+    types: [started]
+env:
+  BUILD_DIR: /tmp/ramfs 
+  KVER: 5.15.32
+  ARCH: arm64
+  CROSS_COMPILE: /opt/toolchain/aarch64/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-
+  LOCALVERSION: -rockchip-starx-action
+  INSTALL_TOOLCHAIN: https://github.com/SuzukiHonoka/PHICOMM_N1_SHELL_API/raw/master/setup_aarch64_toolchain.sh
+  KREPO: https://github.com/SuzukiHonoka/linux-5.15.y
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    if: github.event.repository.owner.id == github.event.sender.id
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+    - name: Host info
+      run: |
+        pwd
+        lscpu
+        free -h
+        df -h 
+    - name: Installing requirements 
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison libncurses-dev autoconf dkms libudev-dev libpci-dev libiberty-dev u-boot-tools lzop
+    - name: Mount RAMFS
+      run : |
+        mkdir $BUILD_DIR
+        sudo mount -t tmpfs -o size=6G tmpfs $BUILD_DIR
+    - name: Download scripts and kernel repo
+      run: |
+        cd $BUILD_DIR
+        wget $INSTALL_TOOLCHAIN
+        git clone --depth=1 $KREPO
+    - name: Install cross compile toolchain
+      run: sh setup_aarch64_toolchain.sh
+    - name: Build Kernel  
+      run: |
+        cd linux-*
+        cp $GITHUB_WORKSPACE/.config .config
+        make -j$(nproc) oldconfig
+        make -j$(nproc) bindeb-pkg
+    - name: Extract Binaries
+      run: | 
+        cp arch/arm64/boot/Image $GITHUB_WORKSPACE
+        cp arch/arm64/boot/dts/rockchip/*.dtb $GITHUB_WORKSPACE
+        cp ../*.deb $GITHUB_WORKSPACE
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Kernel ${{ env.KVER }}
+        path: |
+          install_kernel.sh
+          Image
+          *${{ env.KVER }}*
+          .config
+          *.dtb
+    - name: ZIP FILES
+      run: |
+        cd $GITHUB_WORKSPACE
+        zip data.zip install_kernel.sh Image *${{ env.KVER }}* .config *.dtb install_kmod.sh
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.KVER }}
+        release_name: Linux Kernel ${{ env.KVER }}
+        draft: false
+        prerelease: false
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./data.zip
+        asset_name: Kernel ${{ env.KVER }}.zip
+        asset_content_type: application/zip
