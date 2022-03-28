@@ -46,15 +46,16 @@ jobs:
         wget $INSTALL_TOOLCHAIN
         git clone --depth=1 $KREPO
     - name: Install cross compile toolchain
-      run: sh setup_aarch64_toolchain.sh
+      run: cd $BUILD_DIR && sh setup_aarch64_toolchain.sh
     - name: Build Kernel  
       run: |
-        cd linux-*
+        cd $BUILD_DIR/linux-*
         cp $GITHUB_WORKSPACE/.config .config
         make -j$(nproc) oldconfig
         make -j$(nproc) bindeb-pkg
     - name: Extract Binaries
       run: | 
+        cd $BUILD_DIR/linux-*
         cp arch/arm64/boot/Image $GITHUB_WORKSPACE
         cp arch/arm64/boot/dts/rockchip/*.dtb $GITHUB_WORKSPACE
         cp ../*.deb $GITHUB_WORKSPACE
