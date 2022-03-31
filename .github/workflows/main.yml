@@ -59,6 +59,8 @@ jobs:
         cp arch/arm64/boot/Image $GITHUB_WORKSPACE
         cp arch/arm64/boot/dts/rockchip/*.dtb $GITHUB_WORKSPACE
         cp ../*.deb $GITHUB_WORKSPACE
+    - name: Rewrite installer
+      run: sed -i "s/KVER/$KVER/g" $GITHUB_WORKSPACE/install_kernel.sh
     - uses: actions/upload-artifact@v2
       with:
         name: Kernel ${{ env.KVER }}
@@ -71,7 +73,7 @@ jobs:
     - name: ZIP FILES
       run: |
         cd $GITHUB_WORKSPACE
-        zip data.zip install_kernel.sh Image *${{ env.KVER }}* .config *.dtb install_kmod.sh
+        zip data.zip install_kernel.sh Image *${{ env.KVER }}* .config *.dtb
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
