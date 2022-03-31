@@ -1,8 +1,8 @@
 #!/bin/sh
 KV=KVER
 DT=/boot/dtb/rockchip/
-echo "decompressing.."
-unzip Kernel.$KV.zip
+#echo "decompressing.."
+#unzip Kernel.$KV.zip
 echo "copying dtb files.."
 cp *dtb $DT -v
 echo "installing kernel.."
