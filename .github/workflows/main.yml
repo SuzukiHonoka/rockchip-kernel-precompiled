@@ -4,7 +4,7 @@ on:
     types: published
   push:
     branches:
-      - 5.16.x
+      - 5.17.x
     paths:
       - '.config'
       - '.github/workflows/main.yml'
@@ -13,12 +13,12 @@ on:
     types: [started]
 env:
   BUILD_DIR: /tmp/ramfs 
-  KVER: 5.16.18
+  KVER: 5.17.1
   ARCH: arm64
   CROSS_COMPILE: /opt/toolchain/aarch64/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-
   LOCALVERSION: -rockchip-starx-action
   INSTALL_TOOLCHAIN: https://github.com/SuzukiHonoka/PHICOMM_N1_SHELL_API/raw/master/setup_aarch64_toolchain.sh
-  KREPO: https://github.com/SuzukiHonoka/linux-5.16.y
+  KREPO: https://github.com/SuzukiHonoka/linux-5.17.y
 jobs:
   build:
     runs-on: ubuntu-20.04
@@ -49,13 +49,13 @@ jobs:
       run: cd $BUILD_DIR && sh setup_aarch64_toolchain.sh
     - name: Build Kernel  
       run: |
-        cd $BUILD_DIR/linux-5.16.y
+        cd $BUILD_DIR/linux-5.17.y
         cp $GITHUB_WORKSPACE/.config .config
         make -j$(nproc) oldconfig
         make -j$(nproc) bindeb-pkg
     - name: Extract Binaries
       run: | 
-        cd $BUILD_DIR/linux-5.16.y
+        cd $BUILD_DIR/linux-5.17.y
         cp arch/arm64/boot/Image $GITHUB_WORKSPACE
         cp arch/arm64/boot/dts/rockchip/*.dtb $GITHUB_WORKSPACE
         cp ../*.deb $GITHUB_WORKSPACE
