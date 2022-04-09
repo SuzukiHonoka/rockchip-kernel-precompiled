@@ -13,7 +13,7 @@ on:
     types: [started]
 env:
   BUILD_DIR: /tmp/ramfs 
-  KVER: 5.17.1
+  KVER: 5.17.2
   ARCH: arm64
   CROSS_COMPILE: /opt/toolchain/aarch64/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-
   LOCALVERSION: -rockchip-starx-action
